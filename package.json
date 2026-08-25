@@ -1,0 +1,53 @@
+{
+  "name": "dsh-mobile-remote-mode-plugin",
+  "version": "0.1.0-dev.0",
+  "description": "DSH (DeepSeek Harness) mobile remote mode plugin: LAN discovery, QR pairing, Level-1 observer, Level-2 remote prompt. Multi-platform (Android / iOS / any browser), early development (Dev0.1).",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./client": "./src/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-locale"
+      ],
+      "platform": "web"
+    }
+  },
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "deepseek",
+    "deepseek-harness",
+    "dsh-plugin",
+    "plugin",
+    "remote",
+    "remote-access",
+    "remote-prompt",
+    "mobile",
+    "android",
+    "ios",
+    "multi-platform",
+    "lan",
+    "local-network",
+    "multicast",
+    "qr-code",
+    "qr-pairing",
+    "observer"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anonRTtty/DSH-mobile-remote-mode-plugin.git"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-client-runtime": "^0.1.0-rc.6"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

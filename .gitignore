@@ -1,0 +1,7 @@
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+plugin-remote.json
+plugin-remote-security.json
+plugin-remote-audit.jsonl

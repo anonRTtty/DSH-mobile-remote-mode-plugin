@@ -1,0 +1,1260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0e1116" />
+<title>DSH Remote</title>
+<style>
+  :root {
+    --bg: #0e1116;
+    --card: #171c24;
+    --border: #262d3a;
+    --text: #e6e9ef;
+    --sub: #9aa4b2;
+    --green: #3fb950;
+    --red: #f85149;
+    --amber: #d29922;
+    --accent: #4c8bf5;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f5f6f8;
+      --card: #ffffff;
+      --border: #e2e5ea;
+      --text: #1c2128;
+      --sub: #66707d;
+      --amber: #9a6700;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.45;
+    min-height: 100vh;
+    padding: max(20px, env(safe-area-inset-top)) 16px 40px;
+  }
+  .header { display: flex; align-items: baseline; gap: 8px; margin: 4px 2px 18px; }
+  .header h1 { font-size: 22px; font-weight: 700; margin: 0; letter-spacing: .2px; }
+  .header .sub { color: var(--sub); font-size: 13px; }
+  .section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--sub); margin: 0 2px 10px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; }
+  .dot { flex: none; width: 12px; height: 12px; border-radius: 50%; }
+  .dot.online { background: var(--green); box-shadow: 0 0 0 3px color-mix(in srgb, var(--green) 22%, transparent); }
+  .dot.offline { border: 2px solid var(--sub); background: transparent; }
+  .inst { display: flex; align-items: center; gap: 12px; }
+  .inst .body { flex: 1; min-width: 0; }
+  .inst .name { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .inst .desc { color: var(--sub); font-size: 12.5px; margin-top: 2px; }
+  .inst .addr { color: var(--sub); font-size: 12px; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .inst .status { flex: none; font-size: 12.5px; font-weight: 600; }
+  .status.online { color: var(--green); }
+  .status.offline { color: var(--sub); }
+  .tag { display: inline-block; margin-left: 6px; padding: 1px 7px; border: 1px solid var(--border); border-radius: 999px; font-size: 11px; color: var(--sub); vertical-align: 1px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 38px; padding: 8px 16px; border-radius: 11px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: inherit; font-size: 14px; cursor: pointer; }
+  .btn:active { opacity: .8; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.danger { border-color: color-mix(in srgb, var(--red) 55%, var(--border)); color: var(--red); }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn-row { display: flex; gap: 8px; margin-top: 12px; }
+  .btn-row .btn { flex: 1; }
+  .empty { background: var(--card); border: 1px dashed var(--border); border-radius: 14px; padding: 26px 18px; text-align: center; color: var(--sub); }
+  .empty .big { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+  .empty ol { margin: 10px auto 0; padding: 0 18px; text-align: left; font-size: 13px; }
+  .empty li { margin: 4px 0; }
+  .footer { margin-top: 18px; text-align: center; color: var(--sub); font-size: 12px; }
+  .scanline { color: var(--sub); font-size: 12px; margin-bottom: 12px; }
+  .scanline .pulse { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green); margin-right: 6px; animation: blink 1.6s infinite; vertical-align: 1px; }
+  @keyframes blink { 50% { opacity: .25; } }
+  .back { background: none; border: none; color: var(--sub); font: inherit; font-size: 13px; cursor: pointer; padding: 2px 4px; margin: 0 0 10px -4px; }
+  .input { width: 100%; min-height: 40px; padding: 9px 12px; border-radius: 11px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: inherit; font-size: 15px; }
+  .input:focus { outline: none; border-color: var(--accent); }
+  .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 2px; border-bottom: 1px solid color-mix(in srgb, var(--border) 55%, transparent); }
+  .row:last-child { border-bottom: none; }
+  .row .k { color: var(--sub); font-size: 13px; flex: none; }
+  .row .v { text-align: right; font-size: 13.5px; word-break: break-word; min-width: 0; }
+  .row .v.ok { color: var(--green); }
+  .badge { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--border); font-size: 11px; color: var(--sub); vertical-align: 2px; }
+  .badge.l1 { color: var(--green); border-color: color-mix(in srgb, var(--green) 55%, var(--border)); }
+  .banner { border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; font-size: 13.5px; }
+  .banner.warn { background: color-mix(in srgb, var(--amber) 14%, var(--card)); border: 1px solid color-mix(in srgb, var(--amber) 45%, var(--border)); color: var(--amber); }
+  .banner.err { background: color-mix(in srgb, var(--red) 12%, var(--card)); border: 1px solid color-mix(in srgb, var(--red) 45%, var(--border)); color: var(--red); }
+  .banner.ok { background: color-mix(in srgb, var(--green) 12%, var(--card)); border: 1px solid color-mix(in srgb, var(--green) 45%, var(--border)); color: var(--green); }
+  .spin { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--sub); border-top-color: transparent; border-radius: 50%; animation: rot 0.9s linear infinite; vertical-align: -2px; margin-right: 8px; }
+  @keyframes rot { to { transform: rotate(360deg); } }
+  .pair-title { font-size: 17px; font-weight: 700; margin: 2px 2px 14px; }
+  .note { color: var(--sub); font-size: 12.5px; margin-top: 8px; }
+  .level1 { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--green); border: 1px solid color-mix(in srgb, var(--green) 55%, var(--border)); border-radius: 999px; padding: 3px 10px; margin-bottom: 12px; }
+  .level2 { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; color: var(--amber); border: 1px solid color-mix(in srgb, var(--amber) 55%, var(--border)); border-radius: 999px; padding: 3px 10px; margin-bottom: 12px; }
+  .prompt-input { width: 100%; min-height: 84px; padding: 10px 12px; border-radius: 11px; border: 1px solid var(--border); background: var(--card); color: var(--text); font: inherit; font-size: 15px; resize: vertical; }
+  .prompt-input:focus { outline: none; border-color: var(--accent); }
+  .prompt-output { white-space: pre-wrap; word-break: break-word; margin: 0 0 8px; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--card) 60%, transparent); border: 1px solid var(--border); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.55; max-height: 320px; overflow: auto; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>DSH Remote</h1>
+    <span class="sub">DeepSeek Harness</span>
+  </div>
+  <div id="view"></div>
+  <div class="footer" id="footer"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ------------------------------------------------------------ device identity
+  var LS_ID = "dshRemote.deviceId";
+  var LS_NAME = "dshRemote.deviceName";
+  var LS_CREDS = "dshRemote.creds";
+  var LS_PAIR = "dshRemote.pairing";  // { [instance_id]: pending pairing code }
+  var LS_SESS = "dshRemote.sessions"; // { [instance_id]: active session_id }
+
+  function storeGet(key, fallback) {
+    try { var v = localStorage.getItem(key); return v === null ? fallback : v; } catch (e) { return fallback; }
+  }
+  function storeSet(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { /* private mode */ }
+  }
+  function deviceId() {
+    var id = storeGet(LS_ID, "");
+    if (!id) { id = (crypto.randomUUID ? crypto.randomUUID() : "dev-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 12)); storeSet(LS_ID, id); }
+    return id;
+  }
+  function deviceName() {
+    var n = storeGet(LS_NAME, "").trim();
+    return n || "My Phone";
+  }
+  function loadCreds() {
+    try { return JSON.parse(storeGet(LS_CREDS, "{}")) || {}; } catch (e) { return {}; }
+  }
+  function saveCreds(creds) {
+    storeSet(LS_CREDS, JSON.stringify(creds));
+  }
+  function loadMap(key) {
+    try { return JSON.parse(storeGet(key, "{}")) || {}; } catch (e) { return {}; }
+  }
+  function saveMap(key, map) {
+    storeSet(key, JSON.stringify(map));
+  }
+  // Pairing code per instance: stable while a request is pending so a retry
+  // cannot conflict (server F-01: duplicate pair with a different code -> 409).
+  function getPairCode(iid) { return loadMap(LS_PAIR)[iid] || ""; }
+  function setPairCode(iid, code) { var m = loadMap(LS_PAIR); m[iid] = code; saveMap(LS_PAIR, m); }
+  function clearPairCode(iid) { var m = loadMap(LS_PAIR); delete m[iid]; saveMap(LS_PAIR, m); }
+  // Session reuse per instance: reloads reuse the same session instead of
+  // creating a new one every time (server F-03 caps sessions per device).
+  function getStoredSession(iid) { return loadMap(LS_SESS)[iid] || ""; }
+  function setStoredSession(iid, sid) { var m = loadMap(LS_SESS); m[iid] = sid; saveMap(LS_SESS, m); }
+  function clearStoredSession(iid) { var m = loadMap(LS_SESS); delete m[iid]; saveMap(LS_SESS, m); }
+  function randomCode() {
+    if (crypto.randomUUID) return crypto.randomUUID() + crypto.randomUUID();
+    return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 14) + Math.random().toString(36).slice(2, 14);
+  }
+
+  // ------------------------------------------------------------------ state
+  var POLL_MS = 2000;
+  var state = {
+    view: "discovery",       // discovery | pairing | observer | qr-pairing | scan-help
+    instances: [],
+    listError: false,
+    target: null,            // the instance being connected
+    pairingCode: "",
+    pairingStatus: "idle",   // idle | sending | pending | rejected | not-found | paired
+    pairingName: "",
+    qrTicket: "",            // one-time ticket from the QR URL (never stored)
+    qrName: "",
+    qrStatus: "idle",        // idle | sending | pending | rejected | ticket-used | ticket-expired | paired | failed
+    obs: { session: null, data: null, offline: false, rootEl: null, noteEl: null },
+    prompt: { text: "", taskId: null, status: null, output: "", error: null, errorCode: null, errorPartial: null, busy: false, wrapEl: null, taEl: null, sendBtn: null, dynamicEl: null },
+  };
+  var live = { pollTimer: null, sseReader: null, promptSseReader: null, discoveryTimer: null, pairTimer: null, qrTimer: null };
+
+  // ---------------------------------------------------------------- helpers
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+  function baseOf(inst) {
+    return "http://" + inst.ip + ":" + inst.port;
+  }
+  function postJson(url, body, headers) {
+    var h = { "content-type": "application/json", accept: "application/json" };
+    if (headers) for (var k in headers) h[k] = headers[k];
+    return fetch(url, { method: "POST", headers: h, body: JSON.stringify(body || {}), cache: "no-store" }).then(function (r) {
+      return r.json().catch(function () { return null; });
+    });
+  }
+  function fmtUptime(sec) {
+    if (typeof sec !== "number") return "—";
+    sec = Math.floor(sec);
+    var d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60);
+    if (d > 0) return d + "d " + h + "h";
+    if (h > 0) return h + "h " + m + "m";
+    return m + "m";
+  }
+
+  // ------------------------------------------------------------- discovery
+  function pollDiscovery() {
+    fetch("/api/dsh-remote/instances", { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
+      .then(function (data) {
+        state.instances = (data && data.instances) || [];
+        state.listError = false;
+        // Bug 1 fix: never re-render from background discovery while the user
+        // is inside another view (observer/pairing) — a full re-render would
+        // destroy the prompt textarea and steal focus.
+        if (state.view === "discovery") render();
+      })
+      .catch(function () {
+        state.listError = true;
+        if (state.view === "discovery") render();
+      });
+  }
+
+  function startDiscoveryLoop() {
+    stopDiscoveryLoop();
+    pollDiscovery();
+    live.discoveryTimer = setInterval(pollDiscovery, POLL_MS);
+  }
+  function stopDiscoveryLoop() {
+    if (live.discoveryTimer) { clearInterval(live.discoveryTimer); live.discoveryTimer = null; }
+  }
+
+  // --------------------------------------------------------------- pairing
+  function startPairing(inst) {
+    if (inst.status !== "online") return;
+    state.target = inst;
+    // Reuse a pending pairing code so a re-entry never conflicts (F-01 409).
+    var stored = getPairCode(inst.instance_id);
+    state.pairingCode = stored || randomCode();
+    if (!stored) setPairCode(inst.instance_id, state.pairingCode);
+    state.pairingName = deviceName();
+    state.pairingStatus = "idle";
+    state.view = "pairing";
+    render();
+  }
+
+  function requestPairing() {
+    var name = state.pairingName.trim() || "My Phone";
+    storeSet(LS_NAME, name);
+    var target = state.target;
+    var body = { device_id: deviceId(), device_name: name, level: 1, code: state.pairingCode };
+    state.pairingStatus = "sending";
+    render();
+    fetch(baseOf(target) + "/api/dsh-remote/pair", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify(body),
+      cache: "no-store",
+    })
+      .then(function (r) {
+        return r.json().catch(function () { return null; }).then(function (j) { return { status: r.status, body: j }; });
+      })
+      .then(function (res) {
+        var b = res.body || {};
+        if (res.status === 200 && b.status === "paired") {
+          state.pairingStatus = "paired";
+          clearPairCode(target.instance_id);
+          render();
+          return;
+        }
+        if (res.status === 200 && b.status === "pending") {
+          state.pairingStatus = "pending";
+          render();
+          startPairPolling();
+          return;
+        }
+        if (res.status === 409) { state.pairingStatus = "conflict"; render(); return; }
+        if (res.status === 429) { state.pairingStatus = "limited"; render(); return; }
+        state.pairingStatus = "not-found";
+        render();
+      })
+      .catch(function () { state.pairingStatus = "not-found"; render(); });
+  }
+
+  function startPairPolling() {
+    if (live.pairTimer) return;
+    var tick = function () {
+      var target = state.target;
+      if (!target || state.view !== "pairing") { stopPairPolling(); return; }
+      postJson(baseOf(target) + "/api/dsh-remote/pair/status", { device_id: deviceId(), code: state.pairingCode })
+        .then(function (res) {
+          if (!res) return;
+          if (res.status === "accepted" && res.credential) {
+            stopPairPolling();
+            clearPairCode(target.instance_id);
+            var creds = loadCreds();
+            creds[target.instance_id] = { credential: res.credential, paired_at: Date.now() };
+            saveCreds(creds);
+            openObserver();
+          } else if (res.status === "rejected") {
+            stopPairPolling();
+            clearPairCode(target.instance_id);
+            state.pairingStatus = "rejected";
+            render();
+          } else if (res.status === "pending") {
+            state.pairingStatus = "pending";
+            render();
+          } else if (res.status === "paired") {
+            stopPairPolling();
+            clearPairCode(target.instance_id);
+            state.pairingStatus = "paired";
+            render();
+          } else {
+            stopPairPolling();
+            clearPairCode(target.instance_id);
+            state.pairingStatus = "not-found";
+            render();
+          }
+        })
+        .catch(function () { /* server unreachable; keep polling */ });
+    };
+    live.pairTimer = setInterval(tick, POLL_MS);
+    tick();
+  }
+  function stopPairPolling() {
+    if (live.pairTimer) { clearInterval(live.pairTimer); live.pairTimer = null; }
+  }
+
+  // ---------------------------------------------------------- QR pairing
+  // Phase 4: the phone lands here after scanning a QR (page URL is
+  // /pair?ticket=...). The ticket is one-time and is never persisted.
+  function qrStart() {
+    state.qrName = deviceName();
+    state.qrStatus = "idle";
+    fetch("/api/dsh-remote/instances", { cache: "no-store" })
+      .then(function (r) { return r.json().catch(function () { return null; }); })
+      .then(function (d) {
+        var self = null;
+        if (d && d.instances) for (var i = 0; i < d.instances.length; i++) if (d.instances[i].self) self = d.instances[i];
+        state.target = self || { instance_id: "?", instance_name: "DSH", ip: location.hostname, port: location.port || "80", status: "online" };
+        render();
+      })
+      .catch(function () {
+        state.target = { instance_id: "?", instance_name: "DSH", ip: location.hostname, port: location.port || "80", status: "online" };
+        render();
+      });
+  }
+
+  function qrRequestPairing() {
+    var name = state.qrName.trim() || "My Phone";
+    storeSet(LS_NAME, name);
+    state.qrStatus = "sending";
+    render();
+    fetch("/api/dsh-remote/pair", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ device_id: deviceId(), device_name: name, level: 1, code: state.qrTicket }),
+      cache: "no-store",
+    })
+      .then(function (r) {
+        return r.json().catch(function () { return null; }).then(function (j) { return { status: r.status, body: j }; });
+      })
+      .then(function (res) {
+        var b = res.body || {};
+        if (res.status === 200 && b.status === "pending") {
+          state.qrStatus = "pending";
+          render();
+          qrPollStart();
+          return;
+        }
+        if (res.status === 400 && b.code === "ticket-used") {
+          // One-shot ticket already consumed (network retry or a re-scan).
+          // Recover by polling: a pending request for this device may exist.
+          state.qrStatus = "pending";
+          render();
+          qrPollStart();
+          return;
+        }
+        if (res.status === 400 && b.code === "ticket-expired") {
+          state.qrStatus = "ticket-expired";
+          render();
+          return;
+        }
+        state.qrStatus = "failed";
+        render();
+      })
+      .catch(function () { state.qrStatus = "failed"; render(); });
+  }
+
+  function qrPollStart() {
+    if (live.qrTimer) return;
+    live.qrTimer = setInterval(qrPoll, POLL_MS);
+    qrPoll();
+  }
+  function stopQrPoll() {
+    if (live.qrTimer) { clearInterval(live.qrTimer); live.qrTimer = null; }
+  }
+  function qrPoll() {
+    var target = state.target;
+    if (!target || state.view !== "qr-pairing") { stopQrPoll(); return; }
+    postJson(baseOf(target) + "/api/dsh-remote/pair/status", { device_id: deviceId(), code: state.qrTicket })
+      .then(function (res) {
+        if (!res) return;
+        if (res.status === "accepted" && res.credential) {
+          stopQrPoll();
+          var creds = loadCreds();
+          creds[target.instance_id] = { credential: res.credential, paired_at: Date.now() };
+          saveCreds(creds);
+          openObserver(); // auto session -> Level 1 Observer
+        } else if (res.status === "rejected") {
+          stopQrPoll();
+          state.qrStatus = "rejected";
+          render();
+        } else if (res.status === "pending") {
+          state.qrStatus = "pending";
+          render();
+        } else if (res.status === "paired") {
+          stopQrPoll();
+          state.qrStatus = "paired";
+          render();
+        } else {
+          stopQrPoll();
+          state.qrStatus = "failed";
+          render();
+        }
+      })
+      .catch(function () { /* server unreachable; keep polling */ });
+  }
+
+  function showScanHelp() {
+    state.view = "scan-help";
+    render();
+  }
+
+  // -------------------------------------------------------------- observer
+  function openObserver() {
+    var target = state.target;
+    var creds = loadCreds();
+    var entry = creds[target.instance_id];
+    if (!entry || !entry.credential) { backToDiscovery(); return; }
+    stopLive();
+    state.obs = { session: null, data: null, offline: false, rootEl: null, noteEl: null };
+    state.view = "observer";
+    render();
+    var base = baseOf(target);
+    // Reuse the stored session if it is still valid (F-03 caps sessions per
+    // device; reloads must not create a new session every time).
+    var storedSid = getStoredSession(target.instance_id);
+    var reuse = storedSid
+      ? fetch(base + "/api/dsh-remote/observer/status", { headers: { authorization: "Bearer " + storedSid }, cache: "no-store" })
+          .then(function (r) { return r.status === 200 ? { reused: true, session_id: storedSid } : { reused: false }; })
+          .catch(function () { return { reused: false }; })
+      : Promise.resolve({ reused: false });
+    reuse.then(function (res) {
+      if (res.reused) {
+        state.obs.session = { session_id: res.session_id };
+        state.obs.offline = false;
+        render();
+        startLive();
+        return;
+      }
+      return postJson(base + "/api/dsh-remote/session", { credential: entry.credential })
+        .then(function (r) {
+          if (r && r.ok && r.session) {
+            setStoredSession(target.instance_id, r.session.session_id);
+            state.obs.session = r.session;
+            state.obs.offline = false;
+            render();
+            startLive();
+          } else {
+            onCredentialRejected();
+          }
+        })
+        .catch(function () {
+          state.obs.offline = true;
+          render();
+          startFallbackPoll();
+        });
+    });
+  }
+
+  function onCredentialRejected() {
+    // credential revoked -> force re-pair
+    stopLive();
+    var target = state.target;
+    var creds = loadCreds();
+    delete creds[target.instance_id];
+    saveCreds(creds);
+    clearStoredSession(target.instance_id);
+    state.obs = { session: null, data: null, offline: false, rootEl: null, noteEl: null };
+    backToDiscovery();
+  }
+
+  function backToDiscovery() {
+    stopLive();
+    state.view = "discovery";
+    state.target = null;
+    render();
+  }
+
+  function startLive() {
+    stopLive();
+    var session = state.obs.session;
+    if (!session) return;
+    var target = state.target;
+    var headers = { authorization: "Bearer " + session.session_id };
+    state.obs.offline = false;
+    fetch(baseOf(target) + "/api/dsh-remote/observer/events", { headers: headers, cache: "no-store" })
+      .then(function (res) {
+        if (!res.ok || !res.body) throw new Error("no stream");
+        var reader = res.body.getReader();
+        live.sseReader = reader;
+        var decoder = new TextDecoder();
+        var buf = "";
+        var step = function () {
+          reader.read().then(function (chunk) {
+            if (chunk.done) { onStreamEnd(); return; }
+            buf += decoder.decode(chunk.value, { stream: true });
+            var sep;
+            while ((sep = buf.indexOf("\n\n")) >= 0) {
+              var frame = buf.slice(0, sep); buf = buf.slice(sep + 2);
+              var event = "message", dataLine = "";
+              frame.split("\n").forEach(function (line) {
+                if (line.indexOf("event: ") === 0) event = line.slice(7);
+                else if (line.indexOf("data: ") === 0) dataLine += line.slice(6);
+              });
+              if (event === "invalid") { onSessionInvalid(); return; }
+              if (event === "status" && dataLine) {
+                try {
+                  var payload = JSON.parse(dataLine);
+                  if (payload && payload.ok) {
+                    // Bug 1 fix: incremental update — never full re-render,
+                    // which would rebuild (and blur) the prompt textarea.
+                    state.obs.data = payload;
+                    state.obs.offline = false;
+                    updateObserverLive();
+                  }
+                } catch (e) { /* skip malformed */ }
+              }
+            }
+            step();
+          }).catch(function () {
+            onStreamEnd();
+          });
+        };
+        step();
+      })
+      .catch(function () {
+        onStreamEnd();
+      });
+  }
+
+  function onSessionInvalid() {
+    // session died (revoke or broadcast disabled) -> re-establish or drop
+    stopLive();
+    if (state.view === "observer" && state.target) {
+      openObserver();
+    }
+  }
+
+  function onStreamEnd() {
+    stopLive();
+    if (state.view === "observer" && state.target) {
+      startFallbackPoll();
+    }
+  }
+
+  function startFallbackPoll() {
+    if (live.pollTimer) return;
+    var tick = function () {
+      if (state.view !== "observer" || !state.target) { stopLive(); return; }
+      var session = state.obs.session;
+      if (!session) { openObserver(); return; }
+      var target = state.target;
+      fetch(baseOf(target) + "/api/dsh-remote/observer/status", { headers: { authorization: "Bearer " + session.session_id }, cache: "no-store" })
+        .then(function (res) {
+          if (res.status === 401) { onSessionInvalid(); return null; }
+          return res.json().catch(function () { return null; });
+        })
+        .then(function (data) {
+          if (data && data.ok) {
+            state.obs.data = data;
+            state.obs.offline = false;
+            updateObserverLive(); // incremental, keeps the textarea alive
+          } else if (data === null) { /* handled */ }
+        })
+        .catch(function () {
+          state.obs.offline = true;
+          if (state.view === "observer") updateObserverLive();
+        });
+    };
+    live.pollTimer = setInterval(tick, POLL_MS);
+    tick();
+  }
+
+  function stopLive() {
+    if (live.pollTimer) { clearInterval(live.pollTimer); live.pollTimer = null; }
+    if (live.sseReader) { try { live.sseReader.cancel(); } catch (e) {} live.sseReader = null; }
+    stopPromptSse();
+  }
+
+  // ------------------------------------------- Phase 5: Remote Prompt
+  function promptCapable() {
+    var data = state.obs.data;
+    return !!(data && data.session && data.session.capabilities &&
+      data.session.capabilities.indexOf("send_prompt") >= 0);
+  }
+
+  function sendPrompt() {
+    var text = state.prompt.text.trim();
+    if (!text || state.prompt.busy) return;
+    var session = state.obs.session;
+    if (!session) return;
+    state.prompt.busy = true;
+    state.prompt.taskId = null;
+    state.prompt.status = "sending";
+    state.prompt.output = "";
+    state.prompt.error = null;
+    state.prompt.errorCode = null;
+    state.prompt.errorPartial = null;
+    updatePromptComposer();
+    fetch(baseOf(state.target) + "/api/dsh-remote/prompt", {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json", authorization: "Bearer " + session.session_id },
+      body: JSON.stringify({ prompt: text }),
+      cache: "no-store",
+    })
+      .then(function (r) {
+        return r.json().catch(function () { return null; }).then(function (j) { return { status: r.status, body: j }; });
+      })
+      .then(function (res) {
+        var b = res.body || {};
+        if (res.status === 200 && b.ok && b.task_id) {
+          state.prompt.taskId = b.task_id;
+          state.prompt.status = "queued";
+          state.prompt.busy = false;
+          // Success: drop the submitted text so the box is ready for the next
+          // prompt, but keep anything the user typed while the task ran.
+          if (state.prompt.taEl) {
+            var cur = state.prompt.taEl.value;
+            if (cur.trim() === text) { state.prompt.taEl.value = ""; state.prompt.text = ""; }
+          }
+          updatePromptComposer();
+          startPromptSse(b.task_id);
+        } else if (res.status === 401) {
+          state.prompt.busy = false;
+          onSessionInvalid();
+        } else if (res.status === 403) {
+          state.prompt.error = "This device does not have permission to send prompts.";
+          state.prompt.errorCode = b.error_code || null;
+          state.prompt.busy = false;
+          updatePromptComposer();
+        } else if (res.status === 429) {
+          state.prompt.error = b.code === "prompt-limit"
+            ? "Too many active prompts. Wait for one to finish."
+            : "Too many prompts. Try again in a minute.";
+          state.prompt.errorCode = b.error_code || null;
+          state.prompt.busy = false;
+          updatePromptComposer();
+        } else if (res.status === 413) {
+          state.prompt.error = "Prompt is too long (max 8 KB).";
+          state.prompt.errorCode = b.error_code || null;
+          state.prompt.busy = false;
+          updatePromptComposer();
+        } else {
+          state.prompt.error = "Failed to send the prompt.";
+          state.prompt.errorCode = b.error_code || null;
+          state.prompt.busy = false;
+          updatePromptComposer();
+        }
+      })
+      .catch(function () { state.prompt.error = "Network error."; state.prompt.errorCode = null; state.prompt.busy = false; updatePromptComposer(); });
+  }
+
+  function startPromptSse(taskId) {
+    stopPromptSse();
+    var session = state.obs.session;
+    if (!session) return;
+    fetch(baseOf(state.target) + "/api/dsh-remote/prompt/events?task_id=" + encodeURIComponent(taskId), {
+      headers: { authorization: "Bearer " + session.session_id },
+      cache: "no-store",
+    })
+      .then(function (res) {
+        if (res.status === 401) { onSessionInvalid(); return; }
+        if (res.status === 404) {
+          return res.json().catch(function () { return null; }).then(function (b) {
+            state.prompt.error = "Task not found.";
+            state.prompt.errorCode = (b && b.code) ? String(b.code).toUpperCase() : "TASK_NOT_FOUND";
+            state.prompt.busy = false;
+            updatePromptComposer();
+          });
+        }
+        if (!res.ok || !res.body) throw new Error("no stream");
+        var reader = res.body.getReader();
+        live.promptSseReader = reader;
+        var decoder = new TextDecoder();
+        var buf = "";
+        var step = function () {
+          reader.read().then(function (chunk) {
+            if (chunk.done) {
+              stopPromptSse();
+              // Stream closed without a terminal frame (network drop): recover
+              // by polling the server-side status until the task settles.
+              if (state.prompt.status !== "completed" && state.prompt.status !== "failed") {
+                refreshPromptStatus(taskId);
+              } else {
+                updatePromptComposer();
+              }
+              return;
+            }
+            buf += decoder.decode(chunk.value, { stream: true });
+            var sep;
+            while ((sep = buf.indexOf("\n\n")) >= 0) {
+              var frame = buf.slice(0, sep); buf = buf.slice(sep + 2);
+              var dataLine = "";
+              frame.split("\n").forEach(function (line) {
+                if (line.indexOf("data: ") === 0) dataLine += line.slice(6);
+              });
+              if (!dataLine) continue;
+              try {
+                var payload = JSON.parse(dataLine);
+                if (payload && payload.task_id) {
+                  state.prompt.taskId = payload.task_id;
+                  state.prompt.status = payload.status;
+                  state.prompt.output = payload.output || "";
+                  if (payload.status === "completed" || payload.status === "failed") {
+                    state.prompt.busy = false;
+                    if (payload.status === "failed") {
+                      // Structured diagnostics: machine code + short message.
+                      // Never expose stacks, paths, credentials or keys.
+                      state.prompt.errorCode = payload.error_code || "AGENT_EXECUTION_FAILED";
+                      state.prompt.error = payload.error_message || "The agent task failed.";
+                      state.prompt.errorPartial = payload.output || "";
+                    }
+                    stopPromptSse();
+                    updatePromptComposer();
+                    return;
+                  }
+                  updatePromptComposer();
+                }
+              } catch (e) { /* skip malformed frames */ }
+            }
+            step();
+          }).catch(function () { stopPromptSse(); updatePromptComposer(); });
+        };
+        step();
+      })
+      .catch(function () { stopPromptSse(); updatePromptComposer(); });
+  }
+
+  // Recovery path: the task SSE dropped before a terminal frame. Poll the
+  // server-side task status (bounded) and apply the snapshot like a frame.
+  function refreshPromptStatus(taskId) {
+    var session = state.obs.session;
+    if (!session || !taskId) return;
+    var tries = 0;
+    var tick = function () {
+      if (state.view !== "observer" || !state.obs.session || !state.target) return;
+      if (tries >= 30) { state.prompt.busy = false; updatePromptComposer(); return; }
+      tries += 1;
+      fetch(baseOf(state.target) + "/api/dsh-remote/prompt/status?task_id=" + encodeURIComponent(taskId), {
+        headers: { authorization: "Bearer " + session.session_id },
+        cache: "no-store",
+      })
+        .then(function (r) { return r.json().catch(function () { return null; }); })
+        .then(function (snap) {
+          if (!snap || !snap.ok || !snap.task) { setTimeout(tick, 2000); return; }
+          var payload = snap.task;
+          state.prompt.taskId = payload.task_id;
+          state.prompt.status = payload.status;
+          state.prompt.output = payload.output || "";
+          if (payload.status === "failed") {
+            state.prompt.busy = false;
+            state.prompt.errorCode = payload.error_code || "AGENT_EXECUTION_FAILED";
+            state.prompt.error = payload.error_message || "The agent task failed.";
+            state.prompt.errorPartial = payload.output || "";
+            updatePromptComposer();
+            return;
+          }
+          if (payload.status === "completed") { state.prompt.busy = false; updatePromptComposer(); return; }
+          setTimeout(tick, 2000);
+        })
+        .catch(function () { setTimeout(tick, 2000); });
+    };
+    tick();
+  }
+
+  function stopPromptSse() {
+    if (live.promptSseReader) { try { live.promptSseReader.cancel(); } catch (e) {} live.promptSseReader = null; }
+  }
+
+  // Phase 5: Remote Prompt composer. The textarea is created ONCE and cached
+  // (state.prompt.taEl); live task frames only refresh the dynamic region
+  // below it (updatePromptComposer). Rebuilding the textarea on every status
+  // frame was Bug 1: the phone keyboard collapsed and focus was lost.
+  function renderPromptComposer(root) {
+    var p = state.prompt;
+    var wrap = el("div", "card");
+    wrap.appendChild(el("div", "section-title", "Remote Prompt"));
+    var ta = el("textarea", "prompt-input");
+    ta.rows = 3;
+    ta.placeholder = "Ask your DSH…";
+    ta.value = p.text;
+    ta.addEventListener("input", function () { p.text = ta.value; });
+    wrap.appendChild(ta);
+    var sendRow = el("div", "btn-row");
+    var send = el("button", "btn primary", "Send");
+    send.type = "button";
+    send.addEventListener("click", sendPrompt);
+    sendRow.appendChild(send);
+    wrap.appendChild(sendRow);
+
+    var dyn = el("div", "prompt-dynamic");
+    wrap.appendChild(dyn);
+
+    // Cache the stable nodes; only the dynamic region is rebuilt on frames.
+    p.wrapEl = wrap;
+    p.taEl = ta;
+    p.sendBtn = send;
+    p.dynamicEl = dyn;
+    root.appendChild(wrap);
+    updatePromptComposer();
+  }
+
+  // Incremental refresh of the prompt card's status area. Never touches the
+  // textarea or the Send button, so focus and the on-screen keyboard survive
+  // every observer/task frame.
+  function updatePromptComposer() {
+    var p = state.prompt;
+    if (!p.dynamicEl) return;
+    var dyn = p.dynamicEl;
+    dyn.textContent = "";
+    if (p.sendBtn) {
+      p.sendBtn.textContent = p.busy ? "Sending…" : "Send";
+      p.sendBtn.disabled = p.busy;
+    }
+
+    if (p.status === "sending") {
+      dyn.appendChild(el("div", "banner warn", "Sending…"));
+    } else if (p.status === "queued" || p.status === "running") {
+      var st = el("div", "banner warn");
+      st.appendChild(el("span", "spin"));
+      st.appendChild(document.createTextNode(p.status === "queued" ? "🟡 Queued…" : "🔵 Running…"));
+      dyn.appendChild(st);
+    }
+
+    // Structured failure: machine code + short message + Retry + partial
+    // response. No stack traces, paths, credentials or keys are ever shown.
+    if (p.errorCode || p.error) {
+      var err = el("div", "banner err");
+      var label = p.errorCode ? "Code: " + p.errorCode : "Error";
+      if (p.error) label += " — " + p.error;
+      err.appendChild(document.createTextNode(label));
+      dyn.appendChild(err);
+      var retryRow = el("div", "btn-row");
+      var retry = el("button", "btn", "Retry");
+      retry.type = "button";
+      retry.addEventListener("click", function () { sendPrompt(); });
+      retryRow.appendChild(retry);
+      dyn.appendChild(retryRow);
+    }
+
+    if (p.output) {
+      dyn.appendChild(el("div", "section-title", "Agent Response"));
+      var out = el("pre", "prompt-output");
+      out.textContent = p.output;
+      dyn.appendChild(out);
+    }
+    if (p.status === "completed") dyn.appendChild(el("div", "banner ok", "🟢 Completed"));
+    else if (p.status === "failed") dyn.appendChild(el("div", "banner err", "🔴 Failed"));
+  }
+
+  // ---------------------------------------------------------------- render
+  function render() {
+    var root = document.getElementById("view");
+    root.textContent = "";
+    if (state.view === "pairing") renderPairing(root);
+    else if (state.view === "observer") renderObserver(root);
+    else if (state.view === "qr-pairing") renderQrPairing(root);
+    else if (state.view === "scan-help") renderScanHelp(root);
+    else renderDiscovery(root);
+  }
+
+  function renderScanHelp(root) {
+    var back = el("button", "back", "← Back");
+    back.type = "button";
+    back.addEventListener("click", function () { state.view = "discovery"; render(); });
+    root.appendChild(back);
+    root.appendChild(el("div", "pair-title", "Scan QR to pair"));
+    var card = el("div", "card");
+    card.appendChild(el("div", "note", "Quick pairing without typing an IP or port:"));
+    var ol = el("ol");
+    ol.appendChild(el("li", null, "On the computer, open 远程模式 (Remote Mode) and click “Pair with Phone”."));
+    ol.appendChild(el("li", null, "A QR code appears on the computer screen."));
+    ol.appendChild(el("li", null, "Open your phone camera and scan it."));
+    ol.appendChild(el("li", null, "This page opens automatically and pairing starts here."));
+    card.appendChild(ol);
+    root.appendChild(card);
+    var row = el("div", "btn-row");
+    var okBtn = el("button", "btn primary", "OK");
+    okBtn.type = "button";
+    okBtn.addEventListener("click", function () { state.view = "discovery"; render(); });
+    row.appendChild(okBtn);
+    root.appendChild(row);
+  }
+
+  function renderQrPairing(root) {
+    var t = state.target;
+    var back = el("button", "back", "← Back");
+    back.type = "button";
+    back.addEventListener("click", function () { stopQrPoll(); state.view = "discovery"; render(); });
+    root.appendChild(back);
+    root.appendChild(el("div", "pair-title", "Pairing with " + (t ? t.instance_name : "DSH")));
+    root.appendChild(el("span", "level1", "Network: Local · Access: Level 1 — Observer"));
+
+    var card = el("div", "card");
+    var nameRow = el("div", "row");
+    nameRow.appendChild(el("span", "k", "Device name"));
+    var v = el("div", "v");
+    var input = el("input", "input");
+    input.type = "text";
+    input.maxLength = 64;
+    input.value = state.qrName;
+    input.addEventListener("input", function () { state.qrName = input.value; });
+    v.appendChild(input);
+    nameRow.appendChild(v);
+    card.appendChild(nameRow);
+    card.appendChild(el("div", "note", "This name identifies your phone on the computer."));
+    root.appendChild(card);
+
+    if (state.qrStatus === "idle" || state.qrStatus === "sending") {
+      var btnRow = el("div", "btn-row");
+      var req = el("button", "btn primary", state.qrStatus === "sending" ? "Contacting…" : "Request Pairing");
+      req.type = "button";
+      req.disabled = state.qrStatus === "sending";
+      req.addEventListener("click", qrRequestPairing);
+      btnRow.appendChild(req);
+      root.appendChild(btnRow);
+    }
+
+    if (state.qrStatus === "pending") {
+      var banner = el("div", "banner warn");
+      banner.appendChild(el("span", "spin"));
+      banner.appendChild(document.createTextNode("Waiting for approval on the computer… (New Device Request)"));
+      root.appendChild(banner);
+    } else if (state.qrStatus === "rejected") {
+      root.appendChild(el("div", "banner err", "Pairing rejected"));
+      var retry = el("div", "btn-row");
+      var again = el("button", "btn", "Try again");
+      again.type = "button";
+      again.addEventListener("click", function () { state.qrStatus = "idle"; render(); });
+      retry.appendChild(again);
+      root.appendChild(retry);
+    } else if (state.qrStatus === "ticket-used") {
+      root.appendChild(el("div", "banner err", "This QR code has already been used. Ask the computer to generate a new one."));
+    } else if (state.qrStatus === "ticket-expired") {
+      root.appendChild(el("div", "banner err", "This QR code has expired. Ask the computer to generate a new one."));
+    } else if (state.qrStatus === "paired") {
+      root.appendChild(el("div", "banner warn", "This device is already paired on that computer."));
+    } else if (state.qrStatus === "failed") {
+      root.appendChild(el("div", "banner err", "Pairing failed. Try again."));
+      var failRow = el("div", "btn-row");
+      var failBtn = el("button", "btn", "Try again");
+      failBtn.type = "button";
+      failBtn.addEventListener("click", function () { state.qrStatus = "idle"; render(); });
+      failRow.appendChild(failBtn);
+      root.appendChild(failRow);
+    }
+  }
+
+  function renderDiscovery(root) {
+    var scan = el("div", "scanline");
+    scan.appendChild(el("span", "pulse"));
+    scan.appendChild(el("span", null, state.listError ? "Cannot reach a DSH instance — retrying…" : "Scanning nearby DSH…"));
+    root.appendChild(scan);
+    var qrRow = el("div", "btn-row");
+    var qrBtn = el("button", "btn", "Scan QR to pair");
+    qrBtn.type = "button";
+    qrBtn.addEventListener("click", showScanHelp);
+    qrRow.appendChild(qrBtn);
+    root.appendChild(qrRow);
+    root.appendChild(el("div", "section-title", "Nearby DSH"));
+    var creds = loadCreds();
+
+    if (state.listError) {
+      var box = el("div", "empty");
+      box.appendChild(el("div", "big", "No DSH found"));
+      var ol = el("ol");
+      ol.appendChild(el("li", null, "Make sure the DSH Remote Broadcast is enabled on your PC."));
+      ol.appendChild(el("li", null, "Phone and PC must be on the same network."));
+      box.appendChild(ol);
+      root.appendChild(box);
+      return;
+    }
+    if (state.instances.length === 0) {
+      var empty = el("div", "empty");
+      empty.appendChild(el("div", "big", "No DSH found"));
+      var list = el("ol");
+      list.appendChild(el("li", null, "Make sure the DSH Remote Broadcast is enabled on your PC."));
+      list.appendChild(el("li", null, "Phone and PC must be on the same network."));
+      empty.appendChild(list);
+      root.appendChild(empty);
+      return;
+    }
+
+    state.instances.forEach(function (inst) {
+      var card = el("div", "card");
+      var line = el("div", "inst");
+      line.appendChild(el("span", "dot " + (inst.status === "online" ? "online" : "offline")));
+      var body = el("div", "body");
+      var name = el("div", "name", inst.instance_name || "(unknown)");
+      if (inst.self) name.appendChild(el("span", "tag", "This device"));
+      if (inst.fingerprint) name.appendChild(el("span", "tag", "ID " + inst.fingerprint));
+      body.appendChild(name);
+      body.appendChild(el("div", "desc", "DeepSeek Harness"));
+      body.appendChild(el("div", "addr", (inst.ip || "?") + ":" + (inst.port || "?")));
+      line.appendChild(body);
+      line.appendChild(el("span", "status " + (inst.status === "online" ? "online" : "offline"), inst.status === "online" ? "Online" : "Offline"));
+      card.appendChild(line);
+
+      var paired = Boolean(creds[inst.instance_id]);
+      if (inst.status === "online") {
+        var actionRow = el("div", "btn-row");
+        var btn = el("button", "btn primary", paired ? "Open" : "Connect");
+        btn.type = "button";
+        btn.addEventListener("click", function () {
+          if (paired) { state.target = inst; openObserver(); }
+          else startPairing(inst);
+        });
+        actionRow.appendChild(btn);
+        card.appendChild(actionRow);
+      }
+      root.appendChild(card);
+    });
+  }
+
+  function renderPairing(root) {
+    var back = el("button", "back", "← Back");
+    back.type = "button";
+    back.addEventListener("click", backToDiscovery);
+    root.appendChild(back);
+    root.appendChild(el("div", "pair-title", "Connect to " + (state.target ? state.target.instance_name : "…")));
+    root.appendChild(el("span", "level1", "Request: Level 1 — Observer"));
+
+    var card = el("div", "card");
+    var nameRow = el("div", "row");
+    nameRow.appendChild(el("span", "k", "Device name"));
+    var v = el("div", "v");
+    var input = el("input", "input");
+    input.type = "text";
+    input.maxLength = 64;
+    input.value = state.pairingName;
+    input.addEventListener("input", function () { state.pairingName = input.value; });
+    v.appendChild(input);
+    nameRow.appendChild(v);
+    card.appendChild(nameRow);
+    card.appendChild(el("div", "note", "This name identifies your phone on the computer."));
+    root.appendChild(card);
+
+    if (state.pairingStatus === "idle" || state.pairingStatus === "sending") {
+      var btnRow = el("div", "btn-row");
+      var req = el("button", "btn primary", state.pairingStatus === "sending" ? "Contacting…" : "Request Pairing");
+      req.type = "button";
+      req.disabled = state.pairingStatus === "sending";
+      req.addEventListener("click", requestPairing);
+      btnRow.appendChild(req);
+      root.appendChild(btnRow);
+    }
+
+    if (state.pairingStatus === "pending") {
+      var banner = el("div", "banner warn");
+      banner.appendChild(el("span", "spin"));
+      banner.appendChild(document.createTextNode("Waiting for approval on the computer… (New Device Request)"));
+      root.appendChild(banner);
+    } else if (state.pairingStatus === "rejected") {
+      var rej = el("div", "banner err", "Pairing rejected");
+      root.appendChild(rej);
+      var retry = el("div", "btn-row");
+      var again = el("button", "btn", "Try again");
+      again.type = "button";
+      again.addEventListener("click", function () { state.pairingStatus = "idle"; render(); });
+      retry.appendChild(again);
+      root.appendChild(retry);
+    } else if (state.pairingStatus === "not-found") {
+      var nf = el("div", "banner err", "Pairing request failed or expired. Try again.");
+      root.appendChild(nf);
+      var nfRow = el("div", "btn-row");
+      var nfBtn = el("button", "btn", "Try again");
+      nfBtn.type = "button";
+      nfBtn.addEventListener("click", function () { state.pairingStatus = "idle"; render(); });
+      nfRow.appendChild(nfBtn);
+      root.appendChild(nfRow);
+    } else if (state.pairingStatus === "paired") {
+      var pairedBanner = el("div", "banner warn", "This device is already paired on that computer, but this phone lost its credential. Revoke it in the computer's Remote Mode menu, then pair again.");
+      root.appendChild(pairedBanner);
+    } else if (state.pairingStatus === "conflict") {
+      root.appendChild(el("div", "banner err", "A pairing request for this device already exists on the computer. Wait for its approval (or it expires in a few minutes), then try again."));
+    } else if (state.pairingStatus === "limited") {
+      root.appendChild(el("div", "banner err", "Too many pairing requests. Try again in a minute."));
+    }
+  }
+
+  // Phase 5.1 Bug 1 fix: the observer view builds its DOM once and caches it
+  // (obs.rootEl). Live status frames patch row values in place — a full
+  // re-render on every 2s frame used to rebuild (and blur) the prompt
+  // textarea, collapsing the phone keyboard mid-typing.
+  function renderObserver(root) {
+    var obs = state.obs;
+    var target = state.target;
+    var box = el("div", "obs-root");
+    obs.rootEl = box;
+
+    var back = el("button", "back", "← Disconnect");
+    back.type = "button";
+    back.addEventListener("click", backToDiscovery);
+    box.appendChild(back);
+    box.appendChild(el("div", "pair-title", target ? target.instance_name : "DSH"));
+
+    var badge = el("span", "level1", "Level 1 · Observer");
+    badge.dataset.badge = "level";
+    box.appendChild(badge);
+
+    var card = el("div", "card");
+    card.appendChild(row("DSH Instance", "…", false, "instance"));
+    card.appendChild(row("Status", "…", false, "status"));
+    card.appendChild(row("Connection", "Local Network", true, "connection"));
+    card.appendChild(row("Agent", "…", false, "agent"));
+    card.appendChild(row("Project", "…", false, "project"));
+    card.appendChild(row("Current Task", "Unavailable", false, "task"));
+    card.appendChild(row("API Balance", "…", false, "balance"));
+    card.appendChild(row("System", "…", false, "system"));
+    box.appendChild(card);
+
+    root.appendChild(box);
+
+    // Level note / prompt composer is managed incrementally by
+    // updateObserverLive() so a live level change never rebuilds the
+    // textarea either.
+    updateObserverLive();
+  }
+
+  // Patches the cached observer DOM from state.obs.data. Called on every
+  // observer SSE frame and fallback poll; never rebuilds the prompt textarea.
+  function updateObserverLive() {
+    var obs = state.obs;
+    var box = obs && obs.rootEl;
+    if (!box || box.parentNode !== document.getElementById("view")) return;
+    var data = obs.data;
+
+    // Offline banner (kept as the first child, toggled in place).
+    var offEl = box.querySelector('[data-offline]');
+    if (obs.offline) {
+      if (!offEl) {
+        offEl = el("div", "banner err");
+        offEl.dataset.offline = "1";
+        offEl.appendChild(el("span", "spin"));
+        offEl.appendChild(document.createTextNode("DSH Offline — waiting for the computer…"));
+        box.insertBefore(offEl, box.firstChild);
+      }
+    } else if (offEl) {
+      box.removeChild(offEl);
+    }
+
+    // Level badge + prompt composer presence follow the live capabilities.
+    var l2 = promptCapable();
+    var badge = box.querySelector('[data-badge="level"]');
+    if (badge) {
+      badge.className = l2 ? "level2" : "level1";
+      badge.textContent = l2 ? "Level 2 · Remote Prompt" : "Level 1 · Observer";
+    }
+    var noteEl = obs.noteEl;
+    if (l2) {
+      if (noteEl && noteEl.parentNode) noteEl.parentNode.removeChild(noteEl);
+      obs.noteEl = null;
+      var wrap = state.prompt.wrapEl;
+      if (!wrap || wrap.parentNode !== box) renderPromptComposer(box);
+    } else {
+      var w = state.prompt.wrapEl;
+      if (w && w.parentNode) {
+        w.parentNode.removeChild(w);
+        state.prompt.wrapEl = null;
+        state.prompt.taEl = null;
+        state.prompt.sendBtn = null;
+        state.prompt.dynamicEl = null;
+      }
+      if (!noteEl || noteEl.parentNode !== box) {
+        noteEl = el("div", "note", "Read-only observer session. No prompts, commands or approvals are possible.");
+        obs.noteEl = noteEl;
+        box.appendChild(noteEl);
+      }
+    }
+
+    // Info rows.
+    var conn = data && data.connection;
+    setRow(box, "instance", conn ? conn.instance_name : "…");
+    setRow(box, "status", conn ? (conn.status === "online" ? "Online" : "Offline") : "…", conn && conn.status === "online");
+    var agent = data && data.agent;
+    setRow(box, "agent", agent && agent.available ? (agent.status === "working" ? "Working" : "Idle") : "Unavailable", agent && agent.available && agent.status === "working");
+    var project = data && data.project;
+    var projectText = "Unavailable";
+    if (project && project.available && project.workspaces) {
+      projectText = project.workspaces.map(function (w) { return w.title || w.path; }).join(", ");
+    }
+    setRow(box, "project", projectText, project && project.available);
+    var balance = data && data.balance;
+    var balanceText = "Unavailable";
+    if (balance && balance.available) balanceText = balance.balance + (balance.currency ? " " + balance.currency : "");
+    setRow(box, "balance", balanceText, balance && balance.available);
+    var system = data && data.system;
+    var systemText = "Unavailable";
+    if (system && system.available) {
+      var mem = system.memory ? system.memory.used_pct : null;
+      systemText = (mem !== null ? "Mem " + mem + "%" : "") + (system.uptime_sec ? " · Up " + fmtUptime(system.uptime_sec) : "");
+      systemText = systemText || "OK";
+    }
+    setRow(box, "system", systemText, system && system.available);
+  }
+
+  function setRow(box, okey, text, good) {
+    var node = box.querySelector('[data-okey="' + okey + '"]');
+    if (!node) return;
+    node.textContent = text;
+    node.className = "v" + (good ? " ok" : "");
+  }
+
+  function row(k, v, good, okey) {
+    var r = el("div", "row");
+    r.appendChild(el("span", "k", k));
+    var vs = el("span", "v" + (good ? " ok" : ""), v);
+    if (okey) vs.dataset.okey = okey;
+    r.appendChild(vs);
+    return r;
+  }
+
+  // ------------------------------------------------------------------ boot
+  // Phase 4: a QR link lands on /pair?ticket=... — enter QR pairing directly.
+  try {
+    var bootTicket = new URLSearchParams(location.search).get("ticket") || "";
+    if (bootTicket) {
+      state.view = "qr-pairing";
+      state.qrTicket = bootTicket;
+    }
+  } catch (e) { /* no query parsing available */ }
+  startDiscoveryLoop();
+  if (state.view === "qr-pairing") qrStart();
+
+  // Test hook for test/prompt-ui-test.mjs (harmless in production).
+  try {
+    window.__DSH_REMOTE__ = {
+      state: state,
+      render: render,
+      updateObserverLive: updateObserverLive,
+      updatePromptComposer: updatePromptComposer,
+      renderPromptComposer: renderPromptComposer,
+      sendPrompt: sendPrompt,
+      startPromptSse: startPromptSse,
+      stopPromptSse: stopPromptSse,
+    };
+  } catch (e) { /* not in a test browser */ }
+})();
+</script>
+</body>
+</html>

@@ -1,11 +1,21 @@
 # DSH-mobile-remote-mode-plugin — DSH 移动端远程模式插件
 
 > **版本 Version: Dev0.1** · **多端通用 Multi-platform** · **早期开发 Early Development**
->
-> DSH (DeepSeek Harness) 的移动端远程模式插件：让同一局域网内的 **Android / iOS 手机**（或任何现代浏览器、WebView）发现、配对并远程使用你的 DSH。
-> The mobile remote-mode plugin for DSH (DeepSeek Harness): lets **Android / iOS phones** (or any modern browser / WebView) on the same LAN discover, pair with, and remotely use your DSH.
 
-**English** · [中文](#中文)
+**让手机成为 DSH 的遥控器。** 同一局域网内扫码配对，手机实时观察（Level 1）、远程向真实 Agent 发送提示词（Level 2）；后续方向：Level 3 受控操作、原生 App（Android / iOS）。
+
+**Turn your phone into a DSH remote.** QR pairing over LAN, live observation (Level 1), remote prompts to the real Agent (Level 2) — from Android / iOS / any browser. Roadmap: Level 3 supervised control, native apps.
+
+## 一键安装 / One-click install
+
+```bash
+git clone https://github.com/anonRTtty/DSH-mobile-remote-mode-plugin.git "$HOME/.dsh/profiles/node_modules/dsh-mobile-remote-mode-plugin"
+```
+
+安装后重启 DSH，WebUI → `远程模式 ◯` → 开启 **Remote Broadcast**。
+After installing, restart DSH: WebUI → `远程模式 ◯` → enable **Remote Broadcast**.
+
+[English](#english) · [中文](#中文)
 
 ---
 
@@ -93,6 +103,8 @@
 
 MIT。
 
+[English](#english) · [中文](#中文)
+
 ---
 
 ## English
@@ -178,3 +190,5 @@ The `test/` directory holds a dependency-free regression suite (Node ≥ 20, run
 ### License
 
 MIT.
+
+[中文](#中文) · [English](#english)
